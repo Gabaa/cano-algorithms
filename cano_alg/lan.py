@@ -17,7 +17,7 @@ class LAN:
         return None
 
     @classmethod
-    def setup(cls, filename=None):
+    def setup(cls, filename):
         reading_from_stdin = filename is None
         if not reading_from_stdin:
             f = open(filename, 'r')

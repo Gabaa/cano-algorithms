@@ -1,76 +1,100 @@
 import sys
+from abc import ABC
 
-from cano_alg import lan
+from cano_alg.lan import LAN, Address, Switch
 
 
-def send_command(l, *args):
-    if len(args) != 2:
-        print('Need 2 arguments.')
-        return
+class Command(ABC):
+    def __init__(self, lan: LAN):
+        self.lan: LAN = lan
 
-    src_node = l.find_node_with_name(args[0])
+    def perform(self, *args):
+        raise NotImplementedError
 
-    if src_node is None:
-        print(f"Cannot find any nodes named {src_node}")
-        return
 
-    if not isinstance(src_node, lan.Address):
-        print(f'{src_node} is not an address')
-        return
+class Send(Command):
+    def perform(self, *args):
+        if len(args) != 2:
+            print('Need 2 arguments.')
+            return
 
-    src_node.send_message(args[1])
+        src_name = args[0]
+        src_node = self.lan.find_node_with_name(src_name)
 
-def view_command(l, *args):
-    if len(args) != 1:
-        print('Need 1 argument.')
-        return
-    
-    node = l.find_node_with_name(args[0])
+        if src_node is None:
+            print(f"Cannot find any nodes named {src_name}")
+            return
 
-    if node is None:
-        print(f"Cannot find any nodes named {node}")
-        return
+        if not isinstance(src_node, Address):
+            print(f'{src_node} is not an address')
+            return
 
-    if not isinstance(node, lan.Switch):
-        print(f"{node} is not a switch")
-        return
+        src_node.send_message(args[1])
 
-    node.print_forwarding_table()
 
-def show_usage():
-    print('You can use the following commands:')
-    print(', '.join(['send', 'view', 'help', 'exit']))
+class View(Command):
+    def perform(self, *args):
+        if len(args) != 1:
+            print('Need 1 argument.')
+            return
+
+        node = self.lan.find_node_with_name(args[0])
+
+        if node is None:
+            print(f"Cannot find any nodes named {args[0]}")
+            return
+
+        if not isinstance(node, Switch):
+            print(f"{node} is not a switch")
+            return
+
+        node.print_forwarding_table()
+
+
+class Reset(Command):
+    def perform(self, *args):
+        for switch in self.lan.switches:
+            switch.forwarding_table.clear()
+
+        print('Cleared all forwarding tables.')
+
 
 def main():
+    filename = None
+    
     if len(sys.argv) > 1:
         filename = sys.argv[1]
-        l = lan.LAN.setup(filename=filename)
-    else:
-        l = lan.LAN.setup()
+
+    lan = LAN.setup(filename=filename)
+
+    commands = {
+        "send": Send(lan),
+        "view": View(lan),
+        "reset": Reset(lan)
+    }
 
     print('Enter commands now.')
 
     running = True
     while running:
         line = input("> ").strip()
-        
+
         if line == "":
             continue
 
         args = line.split()
         command = args.pop(0).lower()
 
-        if command == 'send':
-            send_command(l, *args)
-        elif command == 'view':
-            view_command(l, *args)
-        elif command == 'help':
-            show_usage()
+        if command == 'help':
+            print('You can use the following commands:')
+            print(', '.join(list(commands.keys()) + ['help', 'exit']))
         elif command == 'exit':
             running = False
+        elif command in commands.keys():
+            commands[command].perform(*args)
         else:
             print(f"Unknown command '{command}', please try again.")
-            
+
 
 if __name__ == "__main__":
     main()
