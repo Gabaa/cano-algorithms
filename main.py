@@ -37,6 +37,10 @@ def view_command(l, *args):
 
     node.print_forwarding_table()
 
+def show_usage():
+    print('You can use the following commands:')
+    print(', '.join(['send', 'view', 'help', 'exit']))
+
 def main():
     if len(sys.argv) > 1:
         filename = sys.argv[1]
@@ -60,6 +64,8 @@ def main():
             send_command(l, *args)
         elif command == 'view':
             view_command(l, *args)
+        elif command == 'help':
+            show_usage()
         elif command == 'exit':
             running = False
         else:

@@ -36,7 +36,7 @@ class LAN:
             if reading_from_stdin:
                 print("\nEnter all the connections.")
                 print("Two space separated items, 1 connection per line, end with empty line.")
-                print('> ', end='')
+                print('> ', end='', flush=True)
             line = f.readline()
             while line.strip() != "":
                 a, b = line.split()
@@ -61,7 +61,7 @@ class LAN:
                 Interface(a, b)
 
                 if reading_from_stdin:
-                    print('> ', end='')
+                    print('> ', end='', flush=True)
                 line = f.readline()
             
             l = cls(list(addresses.values()), list(switches.values()))
@@ -124,7 +124,7 @@ class Switch(Node):
                 i.send_message(self, src_name, dest_name)
 
     def print_forwarding_table(self):
-        print(f"\nForwarding table of Switch {self.name}")
+        print(f"Forwarding table of Switch {self.name}")
 
         for (src, interface) in self.forwarding_table.items():
             print(f"| {src} | {self.interfaces.index(interface)} |")
